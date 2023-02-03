@@ -10,7 +10,10 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@types/node": "^18.11.18",
+    "bluebird": "^3.7.2",
     "grammy": "^1.13.1",
+    "mysql2": "^3.1.0",
     "nodemon": "^2.0.20"
   }
 }
