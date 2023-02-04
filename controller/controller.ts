@@ -1,45 +1,64 @@
 import {bot} from '../index'
 import {connection} from '../database/database'
 
-type User = {
+type User = [{
     ID: number,
     Username: string,
     FirstName: string,
     LastName: string,
     BotUsername: string,
     Date: string
-}
+}]
 
 
 async function sendSetUsernameMessage(ctx:any): Promise<void> {
-    const sendMessage:string = `Would yo like to change your username or continue as ${ctx.message?.from.first_name}`
+    try{
+        const sendMessage:string = `Would yo like to change your username or continue as ${ctx.message?.from.first_name}`
         await bot.api.sendMessage(ctx.message.chat.id,sendMessage,{reply_markup:{
             force_reply: true,
-            keyboard: [[`Continue as **${ctx.message?.from.first_name}**`],['/newusername']],
+            keyboard: [[`Continue as ${ctx.message?.from.first_name}`],['Set new username']],
             one_time_keyboard: true,
         }})
-}
-
-
-async function startReply(ctx:any): Promise<void>{
-    try{
-        const startText: string = `Hello there! I\'m your bot, to chat with other telegram users anonymusly`
-        await ctx.reply(startText)
-        sendSetUsernameMessage(ctx)
     }catch(err){
         console.log(err);
     }
 }
 
-async function insertUsername(ctx:any): Promise<void>{
-    bot.api.sendMessage(ctx.message.chat.id, 'Insert username',{
-        reply_markup:{
-            force_reply: true,
-            input_field_placeholder: 'Insert new username'
-        }
-    })
+async function sendFindPArtnerButton(ctx:any ,string:string): Promise<void>{
+    bot.api.sendMessage(ctx.message.chat.id,string,{reply_markup:{
+        keyboard: [[`Find a partner`],['/Find adlakhf partner']],
+    }})
 }
 
+async function startReply(ctx:any): Promise<void>{
+    try{
+        const startText: string = `Hello there! I\'m your bot, to chat with other telegram users anonymusly`
+        const UserID:number = ctx.message.from.id
+        const user = await getUserByID(UserID)
+        if(user.length === 0){
+            await ctx.reply(startText)
+            sendSetUsernameMessage(ctx)
+        }else{
+            sendFindPArtnerButton(ctx,startText)
+        }
+    }catch(err){
+        console.log(err);
+    }
+}
+
+async function sendInsertUsername(ctx:any): Promise<void>{
+    try{
+        bot.api.sendMessage(ctx.message.chat.id, 'Insert username',{
+            reply_markup:{
+                force_reply: true,
+                input_field_placeholder: 'Insert new username'
+            }
+        })
+    }catch(err){
+        console.log(err);
+        
+    }
+}
 
 async function setUsername(ctx:any):Promise<void>{
     try{
@@ -69,11 +88,16 @@ async function setUsername(ctx:any):Promise<void>{
     }
 }
 
+async function getUserByID(ID:number): Promise<User|[]>{
+    const db = await connection
+    const [user, rows] = await db.query('SELECT * FROM Users WHERE ID = ?',[ID])
+    return user
+}
 
 
 const controller =  {
     startReply,
-    insertUsername,
+    sendInsertUsername,
     setUsername,
 }
 
