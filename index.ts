@@ -9,9 +9,14 @@ bot.command('start', controller.startReply)
 
 bot.command('newusername',controller.sendInsertUsername)
 
+bot.hears('Set new username',controller.sendInsertUsername)
+
+bot.hears('FIND A PARTNER')
+
 bot.on('message',controller.setUsername)
 
-bot.hears('Set new username', controller.sendInsertUsername)
+
+
 
 
 

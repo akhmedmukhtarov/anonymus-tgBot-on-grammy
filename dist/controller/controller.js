@@ -19,7 +19,7 @@ function sendSetUsernameMessage(ctx) {
             const sendMessage = `Would yo like to change your username or continue as ${(_a = ctx.message) === null || _a === void 0 ? void 0 : _a.from.first_name}`;
             yield index_1.bot.api.sendMessage(ctx.message.chat.id, sendMessage, { reply_markup: {
                     force_reply: true,
-                    keyboard: [[`Continue as **${(_b = ctx.message) === null || _b === void 0 ? void 0 : _b.from.first_name}**`], ['/newusername']],
+                    keyboard: [[`Continue as ${(_b = ctx.message) === null || _b === void 0 ? void 0 : _b.from.first_name}`], ['Set new username']],
                     one_time_keyboard: true,
                 } });
         }
@@ -28,30 +28,14 @@ function sendSetUsernameMessage(ctx) {
         }
     });
 }
-function sebdFindPArtnerButton(ctx, string) {
+function sendFindPArtnerButton(ctx, string) {
     return __awaiter(this, void 0, void 0, function* () {
         index_1.bot.api.sendMessage(ctx.message.chat.id, string, { reply_markup: {
                 keyboard: [[`Find a partner`], ['/Find adlakhf partner']],
             } });
     });
 }
-function startReply(ctx) {
-    return __awaiter(this, void 0, void 0, function* () {
-        try {
-            const startText = `Hello there! I\'m your bot, to chat with other telegram users anonymusly`;
-            yield sebdFindPArtnerButton(ctx, startText);
-            const UserID = ctx.message.from.id;
-            const user = yield getUserByID(UserID);
-            if (user.length === 0) {
-                sendSetUsernameMessage(ctx);
-            }
-        }
-        catch (err) {
-            console.log(err);
-        }
-    });
-}
-function insertUsername(ctx) {
+function sendInsertUsername(ctx) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             index_1.bot.api.sendMessage(ctx.message.chat.id, 'Insert username', {
@@ -66,18 +50,39 @@ function insertUsername(ctx) {
         }
     });
 }
+function startReply(ctx) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const startText = `Hello there! I\'m your bot, to chat with other telegram users anonymusly`;
+            const UserID = ctx.message.from.id;
+            const user = yield getUserByID(UserID);
+            if (user.length === 0) {
+                yield ctx.reply(startText);
+                yield sendSetUsernameMessage(ctx);
+            }
+            else {
+                sendFindPArtnerButton(ctx, startText);
+            }
+        }
+        catch (err) {
+            console.log(err);
+        }
+    });
+}
 function setUsername(ctx) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
+            const help = 'You can /skip or /stop current conversation';
             const userID = ctx.message.from.id;
             const firstName = ctx.message.from.first_name;
             const lastName = ctx.message.from.last_name;
             const username = ctx.message.from.username;
             const text = ctx.message.text;
-            if (text === `Continue as **${firstName}**`) {
+            if (text === `Continue as ${firstName}`) {
                 const db = yield database_1.connection;
                 const sql = 'INSERT INTO Users (ID,FirstName,LastName,Username,BotUSername,Date) VALUES(?,?,?,?,?,?)';
-                db.query(sql, [userID, firstName, lastName, username, firstName, Date()]);
+                db.query(sql, [userID, firstName, lastName, username, firstName, Date()])
+                    .then(sendFindPArtnerButton(ctx, help));
             }
             if (ctx.message.reply_to_message) {
                 const messageRepliedTo = ctx.message.reply_to_message.from.username;
@@ -86,7 +91,8 @@ function setUsername(ctx) {
                 if (messageRepliedTo === 'zeus_chat_bot' && repliedText === 'Insert username') {
                     const db = yield database_1.connection;
                     const sql = 'INSERT INTO Users (ID,FirstName,LastName,Username,BotUSername,Date) VALUES(?,?,?,?,?,?)';
-                    db.query(sql, [userID, firstName, lastName, username, newUsername, Date()]);
+                    db.query(sql, [userID, firstName, lastName, username, newUsername, Date()])
+                        .then(sendFindPArtnerButton(ctx, help));
                 }
             }
         }
@@ -102,9 +108,26 @@ function getUserByID(ID) {
         return user;
     });
 }
+function findPartner(ctx) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const chats = yield findSingleUsers();
+        if (chats.length === 0) {
+            const db = yield database_1.connection;
+            console.log(ctx.message.chat.id);
+            // db.query('INSERT INTO Chat (ID,FirstUserID) VALUES (?,?)',[])
+        }
+    });
+}
+function findSingleUsers() {
+    return __awaiter(this, void 0, void 0, function* () {
+        const db = yield database_1.connection;
+        const [chats, rows] = db.query('SELECT * FROM Chat WHERE CancelledBy = null');
+        return chats;
+    });
+}
 const controller = {
     startReply,
-    insertUsername,
+    sendInsertUsername,
     setUsername,
 };
 exports.controller = controller;
