@@ -1,7 +1,7 @@
 import {Bot} from 'grammy'
 import { controller } from './controller/controller';
 
-const bot = new Bot('6198975010:AAHfeVMNB3siZMHyOBBqA59Jgq-ZOXgI_1k')
+const bot = new Bot('token') //token from bothFather
 
 
 
